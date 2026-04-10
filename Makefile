@@ -10,6 +10,8 @@ ZIP_LIBS := $(shell $(PKG_CONFIG) --libs libzip)
 CXXFLAGS ?= -std=c++17 -Wall -Wextra -pedantic -I./src $(SDL_CFLAGS) $(ZIP_CFLAGS)
 PAK_DIR := dist/RetroRead
 PAK_ASSETS_DIR := $(PAK_DIR)/assets
+RELEASE_DIR := dist/releases
+RELEASE_ZIP := $(RELEASE_DIR)/RetroRead.pak.zip
 
 SOURCES := \
 	src/app/main.cpp \
@@ -54,6 +56,10 @@ tg5040:
 export-tg5040:
 	$(MAKE) -C ports/tg5040 ROOT_DIR=../.. export
 
+release-tg5040: export-tg5040
+	mkdir -p $(RELEASE_DIR)
+	cd dist/tg5040 && zip -r ../releases/RetroRead.pak.zip RetroRead.pak
+
 list-platforms:
 	@echo SDL desktop:
 	@echo "  make"
@@ -76,4 +82,5 @@ $(TARGET): $(SOURCES)
 
 clean:
 	rm -rf $(PAK_DIR)
+	rm -rf $(RELEASE_DIR)
 	del /Q $(TARGET).exe 2>NUL || rm -f $(TARGET)

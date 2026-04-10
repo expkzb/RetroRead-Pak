@@ -1,0 +1,18 @@
+{
+  "name": "RetroRead",
+  "version": "v0.5.0",
+  "type": "TOOL",
+  "description": "A retro game-style reader for EPUB and TXT books on NextUI.",
+  "author": "expkzb",
+  "repo_url": "https://github.com/expkzb/RetroRead-Pak",
+  "release_filename": "RetroRead.pak.zip",
+  "changelog": {
+    "v0.5.0": "Introduced the RetroRead name, TXT support, voice styles, richer dialogue box themes, and a polished TrimUI Brick experience."
+  },
+  "screenshots": [
+    ".github/resources/screenshots/reader-main.jpg"
+  ],
+  "platforms": [
+    "tg5040"
+  ]
+}

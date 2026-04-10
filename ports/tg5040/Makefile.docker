@@ -2,7 +2,7 @@ PROJECT_ROOT ?= $(CURDIR)
 DOCKER_IMAGE ?= ghcr.io/loveretro/tg5040-toolchain
 DOCKER_WORKDIR ?= /workspace
 
-.PHONY: tg5040 export shell
+.PHONY: tg5040 export release shell
 
 tg5040:
 	docker run --rm \
@@ -17,6 +17,13 @@ export:
 		-w "$(DOCKER_WORKDIR)" \
 		$(DOCKER_IMAGE) \
 		make -C ports/tg5040 ROOT_DIR=../.. export
+
+release:
+	docker run --rm \
+		-v "$(PROJECT_ROOT):$(DOCKER_WORKDIR)" \
+		-w "$(DOCKER_WORKDIR)" \
+		$(DOCKER_IMAGE) \
+		make release-tg5040
 
 shell:
 	docker run --rm -it \

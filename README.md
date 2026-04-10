@@ -46,3 +46,11 @@ Put your books into the `Books` directory inside the Pak or into the Books folde
 - Optional text voice effects
 - Multiple dialogue box styles
 - Reading settings tuned for handheld screens
+
+## Support
+
+If RetroRead made your reading time more enjoyable, you can buy me a coffee.
+
+Suggested tip: $3
+
+[![Buy me a coffee via PayPal](https://img.shields.io/badge/Buy%20me%20a%20coffee-PayPal-00457C?logo=paypal&logoColor=white)](https://paypal.me/goldenzhou?locale.x=en_US&country.x=C2)

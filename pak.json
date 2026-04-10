@@ -10,7 +10,9 @@
     "v0.5.0": "Introduced the RetroRead name, TXT support, voice styles, richer dialogue box themes, and a polished TrimUI Brick experience."
   },
   "screenshots": [
-    ".github/resources/screenshots/reader-main.jpg"
+    ".github/resources/screenshots/bookshelf.jpg",
+    ".github/resources/screenshots/reader.jpg",
+    ".github/resources/screenshots/settings.jpg"
   ],
   "platforms": [
     "tg5040"

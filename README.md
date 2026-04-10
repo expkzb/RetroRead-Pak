@@ -6,7 +6,7 @@ RetroRead supports `.epub` and `.txt` books, remembers your reading progress, an
 
 | Bookshelf | Reading | Settings |
 | --- | --- | --- |
-| ![Bookshelf](./.github/resources/screenshots/bookshelf.bmp) | ![Reading](./.github/resources/screenshots/reader.bmp) | ![Settings](./.github/resources/screenshots/settings.bmp) |
+| ![Bookshelf](./.github/resources/screenshots/bookshelf.jpg) | ![Reading](./.github/resources/screenshots/reader.jpg) | ![Settings](./.github/resources/screenshots/settings.jpg) |
 
 ## Install
 

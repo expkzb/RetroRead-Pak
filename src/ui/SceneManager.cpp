@@ -1,0 +1,35 @@
+#include "ui/SceneManager.h"
+
+#include "ui/Scene.h"
+
+SceneManager::~SceneManager() = default;
+
+void SceneManager::setRoot(std::unique_ptr<Scene> scene) {
+    current_ = std::move(scene);
+    if (current_) {
+        current_->onEnter();
+    }
+}
+
+void SceneManager::replace(std::unique_ptr<Scene> scene) {
+    if (current_) {
+        current_->onExit();
+    }
+
+    current_ = std::move(scene);
+    if (current_) {
+        current_->onEnter();
+    }
+}
+
+void SceneManager::update(float dt) {
+    if (current_) {
+        current_->update(dt);
+    }
+}
+
+void SceneManager::render(Renderer& renderer) {
+    if (current_) {
+        current_->render(renderer);
+    }
+}

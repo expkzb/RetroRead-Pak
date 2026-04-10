@@ -1,0 +1,7 @@
+{
+  "name": "RetroRead",
+  "type": "tool",
+  "description": "Dialogue-style EPUB reader prototype for NextUI",
+  "entry": "launch.sh",
+  "platform": "trimui-brick"
+}

@@ -1,0 +1,15 @@
+Books/
+BooksCache/
+Saves/
+dist/
+
+nextreading
+nextreading_asan
+NUL
+
+*.bookcache
+*.log
+*.tmp
+
+.DS_Store
+Thumbs.db

@@ -1,0 +1,7 @@
+services:
+  tg5040:
+    image: ghcr.io/loveretro/tg5040-toolchain
+    working_dir: /workspace
+    volumes:
+      - ../../:/workspace
+    tty: true

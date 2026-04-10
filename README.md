@@ -1,6 +1,6 @@
-# RetroRead
+# RetroRead-Pak
 
-A game-like dialogue-style reader Pak for TrimUI NextUI.
+RetroRead is a game-like dialogue-style reader Pak for TrimUI NextUI. It aims to make reading feel closer to playing through story scenes in a retro game.
 
 This repository now contains a working desktop prototype plus two device-facing paths:
 
@@ -8,6 +8,7 @@ This repository now contains a working desktop prototype plus two device-facing 
 - scene system
 - dialogue-oriented reader scene
 - EPUB compiler and cache
+- TXT compiler and cache
 - desktop SDL backend
 - NextUI input/render/filesystem bridge layers
 - TG5040 export scaffolding for TrimUI Brick

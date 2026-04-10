@@ -4,6 +4,10 @@ RetroRead is a game-like dialogue-style reader Pak for TrimUI NextUI. It aims to
 
 RetroRead supports `.epub` and `.txt` books, remembers your reading progress, and presents text in a dialogue-box style designed for handheld play.
 
+| Bookshelf | Reading | Settings |
+| --- | --- | --- |
+| ![Bookshelf](./.github/resources/screenshots/bookshelf.bmp) | ![Reading](./.github/resources/screenshots/reader.bmp) | ![Settings](./.github/resources/screenshots/settings.bmp) |
+
 ## Install
 
 1. Download the latest release from this repository.

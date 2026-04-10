@@ -104,6 +104,11 @@ int NextUIRenderer::lineHeight(int fontSize, FontPreset fontPreset) const {
     return fallbackLineHeight(fontSize, fontPreset);
 }
 
+bool NextUIRenderer::saveScreenshot(const std::string& path) {
+    (void)path;
+    return false;
+}
+
 int NextUIRenderer::screenWidth() const {
     return width_;
 }

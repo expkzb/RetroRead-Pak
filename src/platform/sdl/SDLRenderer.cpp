@@ -431,6 +431,31 @@ int SDLRenderer::lineHeight(int fontSize, FontPreset fontPreset) const {
 #endif
 }
 
+bool SDLRenderer::saveScreenshot(const std::string& path) {
+    if (renderer_ == nullptr || path.empty()) {
+        return false;
+    }
+
+    int outputWidth = 0;
+    int outputHeight = 0;
+    if (SDL_GetRendererOutputSize(renderer_, &outputWidth, &outputHeight) != 0 ||
+        outputWidth <= 0 || outputHeight <= 0) {
+        return false;
+    }
+
+    SDL_Surface* surface =
+        SDL_CreateRGBSurfaceWithFormat(0, outputWidth, outputHeight, 32, SDL_PIXELFORMAT_ARGB8888);
+    if (surface == nullptr) {
+        return false;
+    }
+
+    const bool ok =
+        SDL_RenderReadPixels(renderer_, nullptr, SDL_PIXELFORMAT_ARGB8888, surface->pixels, surface->pitch) == 0 &&
+        SDL_SaveBMP(surface, path.c_str()) == 0;
+    SDL_FreeSurface(surface);
+    return ok;
+}
+
 int SDLRenderer::screenWidth() const {
     return width_;
 }

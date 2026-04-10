@@ -1,6 +1,6 @@
 {
   "name": "RetroRead",
-  "version": "v0.5.0",
+  "version": "v0.5.1",
   "type": "tool",
   "description": "Read books like a retro game dialogue scene",
   "entry": "launch.sh",

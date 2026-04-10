@@ -48,6 +48,7 @@ public:
 
     virtual int measureTextWidth(const std::string& text, int fontSize, FontPreset fontPreset = FontPreset::Normal) const = 0;
     virtual int lineHeight(int fontSize, FontPreset fontPreset = FontPreset::Normal) const = 0;
+    virtual bool saveScreenshot(const std::string& path) = 0;
 
     virtual int screenWidth() const = 0;
     virtual int screenHeight() const = 0;

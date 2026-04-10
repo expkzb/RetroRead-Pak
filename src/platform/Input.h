@@ -4,6 +4,7 @@ enum class Action {
     Confirm,
     FastForward,
     ToggleAuto,
+    Screenshot,
     OpenMenu,
     Start,
     Back,

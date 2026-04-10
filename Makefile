@@ -58,7 +58,18 @@ export-tg5040:
 
 release-tg5040: export-tg5040
 	mkdir -p $(RELEASE_DIR)
-	cd dist/tg5040 && zip -r ../releases/RetroRead.pak.zip RetroRead.pak
+	rm -f $(RELEASE_ZIP)
+	cd dist/tg5040/RetroRead.pak && \
+	if command -v zip >/dev/null 2>&1; then \
+		zip -r ../../releases/RetroRead.pak.zip .; \
+	elif [ -x /mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe ]; then \
+		src_win=$$(wslpath -w "$$(pwd)"); \
+		dst_win=$$(wslpath -w "$$(pwd)/../../releases/RetroRead.pak.zip"); \
+		/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -Command "if (Test-Path '$$dst_win') { Remove-Item -LiteralPath '$$dst_win' -Force }; Compress-Archive -Path '$$src_win\\*' -DestinationPath '$$dst_win'"; \
+	else \
+		echo "Missing zip and Windows PowerShell for release packaging."; \
+		exit 1; \
+	fi
 
 list-platforms:
 	@echo SDL desktop:

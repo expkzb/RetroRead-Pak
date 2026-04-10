@@ -1,6 +1,8 @@
 #include "app/Application.h"
 
+#include <chrono>
 #include <memory>
+#include <sstream>
 #include <utility>
 
 #include "ui/BookListScene.h"
@@ -48,6 +50,12 @@ void Application::run() {
 
         renderer_->beginFrame();
         sceneManager_.render(*renderer_);
+        if (input_->wasPressed(Action::Screenshot)) {
+            const std::string screenshotPath = buildScreenshotPath();
+            if (!screenshotPath.empty()) {
+                renderer_->saveScreenshot(screenshotPath);
+            }
+        }
         renderer_->endFrame();
     }
 }
@@ -121,4 +129,23 @@ const ReaderSettings& Application::settings() const {
 
 ReaderSettings& Application::settings() {
     return settings_;
+}
+
+std::string Application::buildScreenshotPath() const {
+    if (!fileSystem_) {
+        return {};
+    }
+
+    const std::string screenshotsDir = fileSystem_->savesPath() + "/Screenshots";
+    if (!const_cast<FileSystem&>(*fileSystem_).createDirectories(screenshotsDir)) {
+        return {};
+    }
+
+    const auto now = std::chrono::system_clock::now();
+    const auto millis =
+        std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+
+    std::ostringstream path;
+    path << screenshotsDir << "/RetroRead-" << millis << ".bmp";
+    return path.str();
 }

@@ -52,6 +52,7 @@ public:
 
     int measureTextWidth(const std::string& text, int fontSize, FontPreset fontPreset) const override;
     int lineHeight(int fontSize, FontPreset fontPreset) const override;
+    bool saveScreenshot(const std::string& path) override;
 
     int screenWidth() const override;
     int screenHeight() const override;

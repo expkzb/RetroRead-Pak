@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <memory>
 
 #include "audio/TextBlipPlayer.h"
@@ -44,6 +45,8 @@ public:
     ReaderSettings& settings();
 
 private:
+    std::string buildScreenshotPath() const;
+
     bool running_ = false;
     ReaderSettings settings_;
     BookLibrary library_;

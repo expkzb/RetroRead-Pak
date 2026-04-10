@@ -47,6 +47,6 @@ private:
     int buttonR1_ = 5;
     int buttonSelect_ = 6;
     int buttonStart_ = 7;
-    std::array<bool, 13> pressed_{};
-    std::array<bool, 13> held_{};
+    std::array<bool, 14> pressed_{};
+    std::array<bool, 14> held_{};
 };

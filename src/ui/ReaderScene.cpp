@@ -382,6 +382,10 @@ void ReaderScene::handleInput() {
 
     if (input.wasPressed(Action::Confirm)) {
         if (state_ == ReaderState::Typing) {
+            if (canAdvanceTypedPage(renderer)) {
+                advancePage(renderer);
+                return;
+            }
             typer_.revealAll();
             state_ = progress_.autoPlay ? ReaderState::AutoAdvanceDelay : ReaderState::WaitingForInput;
             autoAdvanceTimer_ = sentencePauseSeconds_;
@@ -543,6 +547,13 @@ bool ReaderScene::hasMorePagedLines(Renderer& renderer) const {
     return pageStartLine_ + capacity < lines.size();
 }
 
+bool ReaderScene::canAdvanceTypedPage(Renderer& renderer) const {
+    if (!hasMorePagedLines(renderer)) {
+        return false;
+    }
+    return typer_.visibleChars() >= visibleCharsOnCurrentPage(renderer) && !typer_.isComplete();
+}
+
 void ReaderScene::advancePage(Renderer& renderer) {
     const std::vector<std::string>& lines = allVisibleLines(renderer);
     const std::size_t capacity = visibleLineCapacity(renderer);
@@ -623,6 +634,20 @@ std::vector<std::string> ReaderScene::visibleRevealTextsOnCurrentPage(Renderer& 
     }
 
     return texts;
+}
+
+std::size_t ReaderScene::visibleCharsOnCurrentPage(Renderer& renderer) const {
+    const_cast<ReaderScene*>(this)->allVisibleLines(renderer);
+    if (cachedLineCharCounts_.empty() || pageStartLine_ >= cachedLineCharCounts_.size()) {
+        return 0;
+    }
+
+    const std::size_t pageEnd = std::min(pageStartLine_ + visibleLineCapacity(renderer), cachedLineCharCounts_.size());
+    std::size_t visibleChars = 0;
+    for (std::size_t i = 0; i < pageEnd; ++i) {
+        visibleChars += cachedLineCharCounts_[i];
+    }
+    return visibleChars;
 }
 
 std::size_t ReaderScene::visibleLineCapacity(Renderer& renderer) const {

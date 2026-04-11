@@ -36,10 +36,12 @@ private:
     void persistProgress();
     bool hasMorePagedLines(Renderer& renderer) const;
     void advancePage(Renderer& renderer);
+    bool canAdvanceTypedPage(Renderer& renderer) const;
     const std::vector<std::string>& allVisibleLines(Renderer& renderer);
     std::vector<std::string> wrapVisibleText(Renderer& renderer) const;
     std::vector<std::string> visibleRevealTextsOnCurrentPage(Renderer& renderer) const;
     std::size_t visibleLineCapacity(Renderer& renderer) const;
+    std::size_t visibleCharsOnCurrentPage(Renderer& renderer) const;
     void refreshLayoutCache(Renderer& renderer);
     void invalidateLayoutCache();
 

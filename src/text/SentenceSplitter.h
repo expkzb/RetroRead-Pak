@@ -8,8 +8,8 @@
 #include "epub/TextBlock.h"
 
 struct SplitOptions {
-    std::size_t preferredMaxChars = 64;
-    std::size_t hardMaxChars = 96;
+    std::size_t preferredMaxChars = 48;
+    std::size_t hardMaxChars = 72;
 };
 
 class SentenceSplitter {

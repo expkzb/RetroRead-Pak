@@ -15,6 +15,8 @@ public:
 
     void update(float dt);
     void render(Renderer& renderer);
+    bool shouldRenderContinuously() const;
+    bool consumeRenderRequest();
 
 private:
     std::unique_ptr<Scene> current_;

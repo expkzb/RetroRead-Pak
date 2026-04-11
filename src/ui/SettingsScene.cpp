@@ -47,6 +47,18 @@ const char* textVoiceModeName(TextVoiceMode mode) {
     }
 }
 
+const char* performanceModeName(PerformanceMode mode) {
+    switch (mode) {
+    case PerformanceMode::Hud:
+        return "HUD";
+    case PerformanceMode::Log:
+        return "Log";
+    case PerformanceMode::Off:
+    default:
+        return "Off";
+    }
+}
+
 int uiFont(int normalSize, int handheldSize) {
 #ifdef NEXTREADING_TG5040
     (void)normalSize;
@@ -85,7 +97,7 @@ void SettingsScene::update(float dt) {
         --selectedIndex_;
     }
 
-    if (input.wasPressed(Action::Down) && selectedIndex_ < 4) {
+    if (input.wasPressed(Action::Down) && selectedIndex_ < 5) {
         ++selectedIndex_;
     }
 
@@ -118,16 +130,27 @@ void SettingsScene::render(Renderer& renderer) {
         TextAlign::Left,
         settings.fontPreset);
 
-    const std::string rows[5] = {
+    if (settings.performanceMode == PerformanceMode::Hud) {
+        renderer.drawText(
+            app_.performanceHudText(),
+            Rect{renderer.screenWidth() - 360, 18, 320, 24},
+            Color{174, 194, 214, 220},
+            uiFont(14, 18),
+            TextAlign::Right,
+            settings.fontPreset);
+    }
+
+    const std::string rows[6] = {
         "Reader Font Size: " + std::to_string(settings.fontSize),
         "Text Speed: " + std::to_string(settings.textSpeed) + " ms",
         std::string("Text Voice: ") + textVoiceModeName(settings.textVoiceMode),
         std::string("Dialogue Style: ") + dialogueStyleName(settings.dialogueStyle),
         std::string("Font: ") + fontPresetName(settings.fontPreset),
+        std::string("Performance: ") + performanceModeName(settings.performanceMode),
     };
 
     int y = uiSpacing(170, 200);
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < 6; ++i) {
         const bool selected = i == selectedIndex_;
         renderer.drawText(
             rows[i],
@@ -174,6 +197,14 @@ void SettingsScene::applyDelta(int delta) {
         settings.fontPreset = static_cast<FontPreset>(preset);
         break;
     }
+    case 5:
+        if (delta != 0) {
+            int mode = static_cast<int>(settings.performanceMode);
+            constexpr int kModeCount = 3;
+            mode = (mode + delta + kModeCount) % kModeCount;
+            settings.performanceMode = static_cast<PerformanceMode>(mode);
+        }
+        break;
     default:
         break;
     }

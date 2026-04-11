@@ -241,6 +241,16 @@ void BookListScene::render(Renderer& renderer) {
             app_.settings().fontPreset);
         y += uiSpacing(48, 88);
     }
+
+    if (app_.settings().performanceMode == PerformanceMode::Hud) {
+        renderer.drawText(
+            app_.performanceHudText(),
+            Rect{renderer.screenWidth() - 360, 18, 320, 24},
+            Color{174, 194, 214, 220},
+            uiFont(14, 18),
+            TextAlign::Right,
+            app_.settings().fontPreset);
+    }
 }
 
 BookScript BookListScene::makeDebugBook() const {

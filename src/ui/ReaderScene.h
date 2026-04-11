@@ -24,6 +24,8 @@ public:
     void onExit() override;
     void update(float dt) override;
     void render(Renderer& renderer) override;
+    bool shouldRenderContinuously() const override;
+    bool consumeRenderRequest() override;
 
 private:
     void handleInput();
@@ -66,4 +68,5 @@ private:
     mutable std::vector<std::string> cachedWrappedLines_;
     mutable std::vector<std::size_t> cachedLineCharCounts_;
     mutable std::vector<std::vector<std::string>> cachedLineCodepoints_;
+    bool renderRequested_ = false;
 };

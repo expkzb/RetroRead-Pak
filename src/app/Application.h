@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <memory>
 
@@ -43,11 +44,23 @@ public:
 
     const ReaderSettings& settings() const;
     ReaderSettings& settings();
+    std::string performanceHudText() const;
 
 private:
     std::string buildScreenshotPath() const;
+    std::string performanceLogPath() const;
+    void updatePerformanceStats(float dt);
+    void sampleCpuUsage();
+    void appendPerformanceLogLine() const;
 
     bool running_ = false;
+    float averageFrameMs_ = 0.0f;
+    float averageFps_ = 0.0f;
+    float sampledCpuPercent_ = -1.0f;
+    float cpuSampleTimer_ = 0.0f;
+    float perfLogTimer_ = 0.0f;
+    std::uint64_t lastCpuSampleMs_ = 0;
+    std::uint64_t lastProcessJiffies_ = 0;
     ReaderSettings settings_;
     BookLibrary library_;
     BookCache bookCache_;

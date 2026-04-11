@@ -33,3 +33,11 @@ void SceneManager::render(Renderer& renderer) {
         current_->render(renderer);
     }
 }
+
+bool SceneManager::shouldRenderContinuously() const {
+    return current_ != nullptr && current_->shouldRenderContinuously();
+}
+
+bool SceneManager::consumeRenderRequest() {
+    return current_ != nullptr && current_->consumeRenderRequest();
+}

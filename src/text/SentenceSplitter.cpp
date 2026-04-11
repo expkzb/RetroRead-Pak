@@ -6,19 +6,39 @@
 #include "text/Utf8.h"
 
 namespace {
+bool isOpeningQuote(const std::string& cp) {
+    return cp == u8"\u201c" || cp == u8"\u2018" || cp == u8"\u300c" || cp == u8"\u300e";
+}
+
+bool isClosingQuote(const std::string& cp) {
+    return cp == u8"\u201d" || cp == u8"\u2019" || cp == u8"\u300d" || cp == u8"\u300f";
+}
+
+bool isIgnorablePunctuation(const std::string& cp) {
+    return cp == "." || cp == "," || cp == "!" || cp == "?" || cp == ":" || cp == ";" || cp == "\"" ||
+           cp == "'" || cp == "(" || cp == ")" || cp == "[" || cp == "]" || cp == "{" || cp == "}" ||
+           cp == "-" || cp == u8"\u3002" || cp == u8"\uff0c" || cp == u8"\u3001" || cp == u8"\uff01" ||
+           cp == u8"\uff1f" || cp == u8"\uff1a" || cp == u8"\uff1b" || cp == u8"\u2026" ||
+           isOpeningQuote(cp) || isClosingQuote(cp) || cp == u8"\uff08" || cp == u8"\uff09" ||
+           cp == u8"\u3010" || cp == u8"\u3011" || cp == u8"\u300a" || cp == u8"\u300b";
+}
+
 bool hasMeaningfulContent(const std::vector<std::string>& codepoints, std::size_t begin, std::size_t end) {
     for (std::size_t i = begin; i < end; ++i) {
         const std::string& cp = codepoints[i];
-        if (utf8::isWhitespace(cp)) {
-            continue;
-        }
-        if (cp == "." || cp == "," || cp == "!" || cp == "?" || cp == ":" || cp == ";" || cp == "\"" ||
-            cp == "'" || cp == "(" || cp == ")" || cp == "[" || cp == "]" || cp == "{" || cp == "}" ||
-            cp == "-" || cp == u8"，" || cp == u8"。" || cp == u8"！" || cp == u8"？" || cp == u8"：" ||
-            cp == u8"；" || cp == u8"、" || cp == u8"“" || cp == u8"”" || cp == u8"‘" || cp == u8"’") {
+        if (utf8::isWhitespace(cp) || isIgnorablePunctuation(cp)) {
             continue;
         }
         return true;
+    }
+    return false;
+}
+
+bool hasNonWhitespaceContent(const std::vector<std::string>& codepoints, std::size_t begin, std::size_t end) {
+    for (std::size_t i = begin; i < end; ++i) {
+        if (!utf8::isWhitespace(codepoints[i])) {
+            return true;
+        }
     }
     return false;
 }
@@ -55,7 +75,7 @@ std::size_t findWordBoundaryBefore(
 bool isAsciiDigit(const std::string& cp) {
     return cp.size() == 1 && cp[0] >= '0' && cp[0] <= '9';
 }
-}
+}  // namespace
 
 SentenceSplitter::SentenceSplitter(SplitOptions options) : options_(options) {
 }
@@ -104,8 +124,18 @@ std::vector<std::string> SentenceSplitter::splitParagraph(const std::string& tex
         while (end > begin && utf8::isWhitespace(codepoints[end - 1])) {
             --end;
         }
-        if (begin < end && hasMeaningfulContent(codepoints, begin, end)) {
-            result.push_back(utf8::join(codepoints, begin, end));
+        if (begin >= end || !hasNonWhitespaceContent(codepoints, begin, end)) {
+            return;
+        }
+
+        const std::string fragment = utf8::join(codepoints, begin, end);
+        if (hasMeaningfulContent(codepoints, begin, end)) {
+            result.push_back(fragment);
+            return;
+        }
+
+        if (!result.empty()) {
+            result.back() += fragment;
         }
     };
 
@@ -131,18 +161,19 @@ std::vector<std::string> SentenceSplitter::splitParagraph(const std::string& tex
         const std::string& cp = codepoints[i];
         ++segmentLength;
 
-        if (cp == "\"" || cp == "'" || cp == "“" || cp == "「" || cp == "『" || cp == "‘") {
+        if (isOpeningQuote(cp)) {
             ++quoteDepth;
-        } else if ((cp == "\"" || cp == "'" || cp == "”" || cp == "」" || cp == "』" || cp == "’") &&
-                   quoteDepth > 0) {
+        } else if (isClosingQuote(cp) && quoteDepth > 0) {
             --quoteDepth;
+        } else if (cp == "\"" || cp == "'") {
+            quoteDepth = quoteDepth > 0 ? quoteDepth - 1 : quoteDepth + 1;
         }
 
         if (!isNumericSeparatorAt(i) && isSoftBreak(cp)) {
             lastSoftBreak = i;
         }
 
-        if (!isDecimalPointAt(i) && !isNumericSeparatorAt(i) && isStrongBreak(cp) && quoteDepth == 0) {
+        if (!isDecimalPointAt(i) && !isNumericSeparatorAt(i) && isStrongBreak(cp)) {
             std::size_t end = i + 1;
             while (end < codepoints.size() && isClosingPunctuation(codepoints[end])) {
                 ++end;
@@ -191,16 +222,16 @@ std::vector<std::string> SentenceSplitter::splitParagraph(const std::string& tex
 
 bool SentenceSplitter::isStrongBreak(const std::string& codepoint) {
     return codepoint == "." || codepoint == "!" || codepoint == "?" || codepoint == ";" ||
-           codepoint == "。" || codepoint == "！" || codepoint == "？" || codepoint == "；" ||
-           codepoint == "…" || codepoint == "……";
+           codepoint == u8"\u3002" || codepoint == u8"\uff01" || codepoint == u8"\uff1f" ||
+           codepoint == u8"\uff1b" || codepoint == u8"\u2026";
 }
 
 bool SentenceSplitter::isSoftBreak(const std::string& codepoint) {
-    return codepoint == "," || codepoint == ":" || codepoint == "，" || codepoint == "：" ||
-           codepoint == "、";
+    return codepoint == "," || codepoint == ":" || codepoint == u8"\uff0c" || codepoint == u8"\uff1a" ||
+           codepoint == u8"\u3001";
 }
 
 bool SentenceSplitter::isClosingPunctuation(const std::string& codepoint) {
-    return codepoint == "\"" || codepoint == "'" || codepoint == "”" || codepoint == "’" ||
-           codepoint == "」" || codepoint == "』" || codepoint == ")" || codepoint == "）";
+    return codepoint == "\"" || codepoint == "'" || isClosingQuote(codepoint) || codepoint == ")" ||
+           codepoint == u8"\uff09" || codepoint == u8"\u3011" || codepoint == u8"\u300b";
 }

@@ -16,6 +16,7 @@ public:
     void onEnter() override;
     void update(float dt) override;
     void render(Renderer& renderer) override;
+    bool shouldRenderContinuously() const override { return true; }
 
 private:
     void finishLoading();

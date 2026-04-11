@@ -7,7 +7,7 @@
 #include "platform/FileSystem.h"
 
 namespace {
-constexpr const char* kCacheVersion = "5";
+constexpr const char* kCacheVersion = "10";
 
 std::string escapeField(std::string value) {
     std::string out;

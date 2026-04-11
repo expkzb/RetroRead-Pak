@@ -1,5 +1,6 @@
 #include "ui/ReaderScene.h"
 
+#include <algorithm>
 #include <memory>
 #include <sstream>
 #include <utility>
@@ -12,6 +13,37 @@
 #include "ui/SettingsScene.h"
 
 namespace {
+bool isLineStartForbiddenPunctuation(const std::string& cp) {
+    return cp == "," || cp == "." || cp == "!" || cp == "?" || cp == ":" || cp == ";" || cp == ")" ||
+           cp == "]" || cp == "}" || cp == u8"\uff0c" || cp == u8"\u3002" || cp == u8"\u3001" ||
+           cp == u8"\uff01" || cp == u8"\uff1f" || cp == u8"\uff1a" || cp == u8"\uff1b" ||
+           cp == u8"\u201d" || cp == u8"\u2019" || cp == u8"\u300d" || cp == u8"\u300f" ||
+           cp == u8"\u300b" || cp == u8"\uff09" || cp == u8"\u3011" || cp == u8"\u2026";
+}
+
+void pullLeadingPunctuationBackward(std::vector<std::string>& lines) {
+    for (std::size_t i = 1; i < lines.size(); ++i) {
+        auto current = utf8::splitCodepoints(lines[i]);
+        if (current.empty()) {
+            continue;
+        }
+
+        std::size_t moveCount = 0;
+        while (moveCount < current.size() && isLineStartForbiddenPunctuation(current[moveCount])) {
+            ++moveCount;
+        }
+
+        if (moveCount == 0) {
+            continue;
+        }
+
+        lines[i - 1] += utf8::join(current, 0, moveCount);
+        lines[i] = utf8::join(current, moveCount, current.size());
+    }
+
+    lines.erase(std::remove_if(lines.begin(), lines.end(), [](const std::string& line) { return line.empty(); }), lines.end());
+}
+
 [[maybe_unused]] std::vector<std::string> wrapTextSimple(
     const std::string& text,
     int maxWidth,
@@ -70,6 +102,7 @@ namespace {
         lines.push_back(text);
     }
 
+    pullLeadingPunctuationBackward(lines);
     return lines;
 }
 
@@ -161,6 +194,7 @@ std::vector<std::string> wrapTextSmart(
         lines.push_back(text);
     }
 
+    pullLeadingPunctuationBackward(lines);
     return lines;
 }
 
@@ -231,6 +265,7 @@ ReaderScene::ReaderScene(Application& app, BookScript book, ReadingProgress prog
 void ReaderScene::onEnter() {
     maxVisibleLines_ = 4;
     invalidateLayoutCache();
+    renderRequested_ = true;
     revealCurrentSentence();
 }
 
@@ -318,6 +353,16 @@ void ReaderScene::render(Renderer& renderer) {
         TextAlign::Left,
         settings.fontPreset);
 
+    if (settings.performanceMode == PerformanceMode::Hud) {
+        renderer.drawText(
+            app_.performanceHudText(),
+            Rect{screenWidth - horizontalMargin - 340, uiSpacing(std::max(24, screenHeight / 22), 28), 320, 24},
+            Color{174, 194, 214, 220},
+            readerMetaFont(),
+            TextAlign::Right,
+            settings.fontPreset);
+    }
+
     if (state_ == ReaderState::Finished || sentence == nullptr) {
         dialogueBox_.setTitle("The End");
         dialogueBox_.setBodyLines({"This book has reached the end.", "Press Menu to return."});
@@ -331,6 +376,17 @@ void ReaderScene::render(Renderer& renderer) {
     dialogueBox_.setBodyRevealTexts(visibleRevealTextsOnCurrentPage(renderer));
     dialogueBox_.setHint(hint);
     dialogueBox_.render(renderer, settings);
+}
+
+bool ReaderScene::shouldRenderContinuously() const {
+    return state_ == ReaderState::Typing || state_ == ReaderState::AutoAdvanceDelay ||
+           app_.settings().performanceMode == PerformanceMode::Hud;
+}
+
+bool ReaderScene::consumeRenderRequest() {
+    const bool requested = renderRequested_;
+    renderRequested_ = false;
+    return requested;
 }
 
 void ReaderScene::handleInput() {
@@ -405,6 +461,9 @@ void ReaderScene::handleInput() {
 void ReaderScene::updateTyping(float dt) {
     const std::size_t previousVisible = typer_.visibleChars();
     const int advanced = typer_.update(dt);
+    if (advanced > 0) {
+        renderRequested_ = true;
+    }
     if (app_.settings().textVoiceMode == TextVoiceMode::Fixed) {
         app_.textBlipPlayer().syncVisibleCodepoints(typer_.codepoints(), typer_.visibleChars());
     } else if (app_.settings().textVoiceMode == TextVoiceMode::FollowText && advanced > 0) {
@@ -423,6 +482,7 @@ void ReaderScene::updateTyping(float dt) {
 
     state_ = progress_.autoPlay ? ReaderState::AutoAdvanceDelay : ReaderState::WaitingForInput;
     autoAdvanceTimer_ = sentencePauseSeconds_;
+    renderRequested_ = true;
 }
 
 void ReaderScene::revealCurrentSentence() {
@@ -437,6 +497,7 @@ void ReaderScene::revealCurrentSentence() {
     typer_.start(sentence->text, static_cast<int>(progress_.textSpeed));
     pageStartLine_ = 0;
     state_ = ReaderState::Typing;
+    renderRequested_ = true;
 }
 
 void ReaderScene::moveToNextSentence() {
@@ -559,6 +620,7 @@ void ReaderScene::advancePage(Renderer& renderer) {
     const std::size_t capacity = visibleLineCapacity(renderer);
     if (pageStartLine_ + capacity < lines.size()) {
         pageStartLine_ += capacity;
+        renderRequested_ = true;
     }
 }
 
@@ -578,8 +640,11 @@ void ReaderScene::refreshLayoutCache(Renderer& renderer) {
         return;
     }
 
-    const int textWidth = std::max(220, renderer.screenWidth() - std::max(36, renderer.screenWidth() / 12) * 2);
     const int bodyFont = readerBodyFont(app_.settings());
+    const int dialogueMargin = std::max(18, renderer.screenWidth() / 24);
+    const int dialogueWidth = renderer.screenWidth() - dialogueMargin * 2;
+    const int safetyPadding = std::max(bodyFont / 2, uiSpacing(18, 30));
+    const int textWidth = std::max(220, dialogueWidth - 48 - safetyPadding);
     const FontPreset fontPreset = app_.settings().fontPreset;
 
     if (layoutCacheValid_ && cachedSentenceText_ == sentence->text && cachedTextWidth_ == textWidth &&
@@ -644,7 +709,7 @@ std::size_t ReaderScene::visibleCharsOnCurrentPage(Renderer& renderer) const {
 
     const std::size_t pageEnd = std::min(pageStartLine_ + visibleLineCapacity(renderer), cachedLineCharCounts_.size());
     std::size_t visibleChars = 0;
-    for (std::size_t i = 0; i < pageEnd; ++i) {
+    for (std::size_t i = pageStartLine_; i < pageEnd; ++i) {
         visibleChars += cachedLineCharCounts_[i];
     }
     return visibleChars;

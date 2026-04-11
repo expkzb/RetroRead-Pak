@@ -23,6 +23,12 @@ enum class TextVoiceMode : std::uint8_t {
     FollowText = 2,
 };
 
+enum class PerformanceMode : std::uint8_t {
+    Off = 0,
+    Hud = 1,
+    Log = 2,
+};
+
 struct Sentence {
     std::string text;
     std::uint32_t chapterIndex = 0;
@@ -61,6 +67,7 @@ struct ReaderSettings {
     std::uint32_t fontSize = 30;
     DialogueStyle dialogueStyle = DialogueStyle::Classic;
     FontPreset fontPreset = FontPreset::Normal;
+    PerformanceMode performanceMode = PerformanceMode::Off;
 };
 
 struct BookListItem {

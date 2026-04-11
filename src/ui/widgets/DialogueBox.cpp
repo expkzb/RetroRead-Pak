@@ -167,6 +167,7 @@ void DialogueBox::render(Renderer& renderer, const ReaderSettings& settings) {
     const int hintHeight = renderer.lineHeight(hintFont, settings.fontPreset);
     const int innerX = bounds_.x + 24;
     const int innerWidth = bounds_.w - 48;
+    const int bodyRenderWidth = innerWidth + uiSpacing(8, 14);
     const int titleY = bounds_.y + 16;
     const int bodyY = titleY + titleHeight + uiSpacing(14, 22);
     const int lineStep = bodyHeight + uiSpacing(6, 12);
@@ -178,7 +179,7 @@ void DialogueBox::render(Renderer& renderer, const ReaderSettings& settings) {
         if (i < bodyRevealTexts_.size() && !bodyRevealTexts_[i].empty()) {
             renderer.drawText(
                 bodyRevealTexts_[i],
-                Rect{innerX, y, innerWidth, bodyHeight + 8},
+                Rect{innerX, y, bodyRenderWidth, bodyHeight + 8},
                 bodyColor,
                 bodyFont,
                 TextAlign::Left,

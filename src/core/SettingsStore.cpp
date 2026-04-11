@@ -40,6 +40,10 @@ bool SettingsStore::load(FileSystem& fileSystem, ReaderSettings& settings) const
             settings.dialogueStyle = static_cast<DialogueStyle>(std::stoi(value));
         } else if (key == "fontPreset") {
             settings.fontPreset = static_cast<FontPreset>(std::stoi(value));
+        } else if (key == "showPerformanceHud") {
+            settings.performanceMode = value == "1" ? PerformanceMode::Hud : PerformanceMode::Off;
+        } else if (key == "performanceMode") {
+            settings.performanceMode = static_cast<PerformanceMode>(std::stoi(value));
         }
     }
 
@@ -56,6 +60,7 @@ bool SettingsStore::save(FileSystem& fileSystem, const ReaderSettings& settings)
     out << "fontSize\t" << settings.fontSize << '\n';
     out << "dialogueStyle\t" << static_cast<int>(settings.dialogueStyle) << '\n';
     out << "fontPreset\t" << static_cast<int>(settings.fontPreset) << '\n';
+    out << "performanceMode\t" << static_cast<int>(settings.performanceMode) << '\n';
 
     return fileSystem.writeTextFile(settingsPath(fileSystem), out.str());
 }

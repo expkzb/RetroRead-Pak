@@ -12,6 +12,7 @@ class EpubCompiler {
 public:
     bool readMetadata(const std::string& epubPath, BookScript& outBook) const;
     bool compile(const std::string& epubPath, BookScript& outBook) const;
+    bool compileChapterList(const std::string& epubPath, BookScript& outBook) const;
 
 private:
     struct NavPoint {

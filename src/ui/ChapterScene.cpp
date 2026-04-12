@@ -1,6 +1,7 @@
 #include "ui/ChapterScene.h"
 
 #include <algorithm>
+#include <chrono>
 #include <memory>
 #include <utility>
 
@@ -8,6 +9,7 @@
 #include "platform/Input.h"
 #include "platform/Renderer.h"
 #include "ui/BookListScene.h"
+#include "ui/LoadingScene.h"
 #include "ui/ReaderScene.h"
 #include "ui/ThemePalette.h"
 
@@ -66,6 +68,16 @@ void ChapterScene::update(float dt) {
     }
 
     if (input.wasPressed(Action::Confirm) && !book_.chapters.empty()) {
+        if (book_.chapters[selectedIndex_].sentences.empty() && !book_.sourcePath.empty()) {
+            app_.sceneManager().replace(std::make_unique<LoadingScene>(
+                app_,
+                book_.sourcePath,
+                book_.title,
+                LoadingTarget::Reader,
+                selectedIndex_));
+            return;
+        }
+
         ReadingProgress progress{
             book_.bookId,
             static_cast<std::uint32_t>(selectedIndex_),
@@ -80,6 +92,12 @@ void ChapterScene::update(float dt) {
                 progress.sentenceIndex = savedProgress_.sentenceIndex;
             }
         }
+        progress.lastOpenedAt = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::system_clock::now().time_since_epoch())
+                .count());
+        app_.progressStore().put(progress);
+        app_.progressStore().save(app_.fileSystem());
 
         app_.sceneManager().replace(std::make_unique<ReaderScene>(
             app_,
@@ -129,7 +147,7 @@ void ChapterScene::render(Renderer& renderer) {
         const Color textColor = selected ? palette.selectionText : palette.primaryText;
         const Color metaColor = selected ? palette.selectionSubtext : palette.secondaryText;
         if (selected) {
-            const Rect rowRect{52, y - uiSpacing(10, 14), renderer.screenWidth() - 104, uiSpacing(56, 88)};
+            const Rect rowRect{52, y - uiSpacing(4, 6), renderer.screenWidth() - 104, uiSpacing(50, 80)};
             renderer.fillRect(rowRect, palette.selectionFill);
             renderer.drawRect(rowRect, palette.selectionOutline);
         }
@@ -142,13 +160,15 @@ void ChapterScene::render(Renderer& renderer) {
             TextAlign::Left,
             app_.settings().fontPreset);
 
-        renderer.drawText(
-            std::to_string(book_.chapters[i].sentences.size()) + " sentences",
-            Rect{90, y + uiSpacing(26, 46), renderer.screenWidth() - 180, uiSpacing(20, 32)},
-            metaColor,
-            uiFont(14, 24),
-            TextAlign::Left,
-            app_.settings().fontPreset);
+        if (!book_.chapters[i].sentences.empty()) {
+            renderer.drawText(
+                std::to_string(book_.chapters[i].sentences.size()) + " sentences",
+                Rect{90, y + uiSpacing(26, 46), renderer.screenWidth() - 180, uiSpacing(20, 32)},
+                metaColor,
+                uiFont(14, 24),
+                TextAlign::Left,
+                app_.settings().fontPreset);
+        }
 
         if (hasSavedProgress_ && savedProgress_.chapterIndex == static_cast<std::uint32_t>(i)) {
             renderer.drawText(

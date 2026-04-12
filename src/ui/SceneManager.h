@@ -20,4 +20,5 @@ public:
 
 private:
     std::unique_ptr<Scene> current_;
+    bool renderRequested_ = false;
 };

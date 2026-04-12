@@ -442,6 +442,138 @@ bool EpubCompiler::compile(const std::string& epubPath, BookScript& outBook) con
     return !outBook.chapters.empty();
 }
 
+bool EpubCompiler::compileChapterList(const std::string& epubPath, BookScript& outBook) const {
+    if (!readMetadata(epubPath, outBook)) {
+        return false;
+    }
+
+    EpubArchive archive;
+    archive.open(epubPath);
+
+    std::string containerXml;
+    archive.readTextFile("META-INF/container.xml", containerXml);
+    const std::string opfPath = parseRootFilePath(containerXml);
+    if (opfPath.empty()) {
+        return false;
+    }
+
+    std::string opfXml;
+    archive.readTextFile(opfPath, opfXml);
+
+    const std::regex manifestPattern("<item\\b[^>]*>", std::regex::icase);
+    const std::regex spinePattern(
+        "<itemref[^>]*idref\\s*=\\s*\"([^\"]+)\"",
+        std::regex::icase);
+
+    std::vector<std::tuple<std::string, std::string, std::string>> manifest;
+    for (auto it = std::sregex_iterator(opfXml.begin(), opfXml.end(), manifestPattern);
+         it != std::sregex_iterator();
+         ++it) {
+        const std::string tag = (*it)[0].str();
+        const std::string id = parseTagAttribute(tag, "id");
+        const std::string href = parseTagAttribute(tag, "href");
+        const std::string mediaType = parseTagAttribute(tag, "media-type");
+        if (!id.empty() && !href.empty() && !mediaType.empty()) {
+            manifest.emplace_back(id, href, mediaType);
+        }
+    }
+
+    std::vector<std::string> spineIds;
+    for (auto it = std::sregex_iterator(opfXml.begin(), opfXml.end(), spinePattern);
+         it != std::sregex_iterator();
+         ++it) {
+        spineIds.push_back((*it)[1].str());
+    }
+
+    std::string ncxPath;
+    std::string spineTag;
+    {
+        const std::regex spineTagPattern(R"(<spine\b[^>]*>)", std::regex::icase);
+        std::smatch spineMatch;
+        if (std::regex_search(opfXml, spineMatch, spineTagPattern)) {
+            spineTag = spineMatch[0].str();
+        }
+    }
+    const std::string tocId = parseTagAttribute(spineTag, "toc");
+    if (!tocId.empty()) {
+        auto tocMatch = std::find_if(manifest.begin(), manifest.end(), [&](const auto& item) {
+            return std::get<0>(item) == tocId;
+        });
+        if (tocMatch != manifest.end()) {
+            ncxPath = joinOpfPath(opfPath, std::get<1>(*tocMatch));
+        }
+    }
+
+    if (!ncxPath.empty()) {
+        std::string ncxXml;
+        if (archive.readTextFile(ncxPath, ncxXml)) {
+            const std::vector<NavPoint> navPoints = parseNavPoints(ncxXml, opfPath);
+            for (const NavPoint& navPoint : navPoints) {
+                if (!isUsefulNavTitle(navPoint.title)) {
+                    continue;
+                }
+
+                Chapter chapter;
+                chapter.id = navPoint.srcPath + (navPoint.anchor.empty() ? "" : "#" + navPoint.anchor);
+                chapter.title = normalizeText(navPoint.title);
+                if (!chapter.title.empty()) {
+                    outBook.chapters.push_back(std::move(chapter));
+                }
+            }
+            if (!outBook.chapters.empty()) {
+                return true;
+            }
+        }
+    }
+
+    std::uint32_t chapterNumber = 1;
+    for (const std::string& idref : spineIds) {
+        auto match = std::find_if(manifest.begin(), manifest.end(), [&](const auto& item) {
+            return std::get<0>(item) == idref;
+        });
+
+        if (match == manifest.end()) {
+            continue;
+        }
+
+        const std::string& href = std::get<1>(*match);
+        const std::string& mediaType = std::get<2>(*match);
+        if (mediaType != "application/xhtml+xml" && mediaType != "text/html") {
+            continue;
+        }
+
+        std::string html;
+        if (!archive.readTextFile(joinOpfPath(opfPath, href), html)) {
+            continue;
+        }
+
+        std::vector<TextBlock> blocks;
+        if (!extractor_.extract(html, blocks)) {
+            continue;
+        }
+
+        std::string title;
+        for (const TextBlock& block : blocks) {
+            title = normalizeText(block.text);
+            if (!title.empty()) {
+                break;
+            }
+        }
+
+        if (title.empty()) {
+            title = "Chapter " + std::to_string(chapterNumber);
+        }
+
+        Chapter chapter;
+        chapter.id = idref;
+        chapter.title = std::move(title);
+        outBook.chapters.push_back(std::move(chapter));
+        ++chapterNumber;
+    }
+
+    return !outBook.chapters.empty();
+}
+
 std::string EpubCompiler::parseRootFilePath(const std::string& containerXml) {
     const std::regex rootFilePattern("full-path\\s*=\\s*\"([^\"]+)\"", std::regex::icase);
     std::smatch match;

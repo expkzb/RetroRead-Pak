@@ -8,6 +8,7 @@ void SceneManager::setRoot(std::unique_ptr<Scene> scene) {
     current_ = std::move(scene);
     if (current_) {
         current_->onEnter();
+        renderRequested_ = true;
     }
 }
 
@@ -19,6 +20,7 @@ void SceneManager::replace(std::unique_ptr<Scene> scene) {
     current_ = std::move(scene);
     if (current_) {
         current_->onEnter();
+        renderRequested_ = true;
     }
 }
 
@@ -39,5 +41,10 @@ bool SceneManager::shouldRenderContinuously() const {
 }
 
 bool SceneManager::consumeRenderRequest() {
-    return current_ != nullptr && current_->consumeRenderRequest();
+    bool requested = renderRequested_;
+    renderRequested_ = false;
+    if (current_ != nullptr && current_->consumeRenderRequest()) {
+        requested = true;
+    }
+    return requested;
 }

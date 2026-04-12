@@ -49,6 +49,24 @@ bool loadOrCompileBook(Application& app, const std::string& path, BookScript& ou
     return true;
 }
 
+bool loadChapterList(Application& app, const std::string& path, BookScript& outBook) {
+    if (app.bookCache().load(app.fileSystem(), path, outBook)) {
+        return true;
+    }
+
+    if (hasExtension(path, ".txt")) {
+        TxtCompiler compiler;
+        return compiler.compile(path, outBook);
+    }
+
+    EpubCompiler compiler;
+    if (compiler.compileChapterList(path, outBook)) {
+        return true;
+    }
+
+    return loadOrCompileBook(app, path, outBook);
+}
+
 int uiFont(int normalSize, int handheldSize) {
 #ifdef NEXTREADING_TG5040
     (void)normalSize;
@@ -70,8 +88,17 @@ int uiSpacing(int normalValue, int handheldValue) {
 }
 }  // namespace
 
-LoadingScene::LoadingScene(Application& app, std::string bookPath, std::string bookTitle, LoadingTarget target)
-    : AppScene(app), bookPath_(std::move(bookPath)), bookTitle_(std::move(bookTitle)), target_(target) {
+LoadingScene::LoadingScene(
+    Application& app,
+    std::string bookPath,
+    std::string bookTitle,
+    LoadingTarget target,
+    int requestedChapterIndex)
+    : AppScene(app),
+      bookPath_(std::move(bookPath)),
+      bookTitle_(std::move(bookTitle)),
+      target_(target),
+      requestedChapterIndex_(requestedChapterIndex) {
 }
 
 void LoadingScene::onEnter() {
@@ -101,7 +128,9 @@ void LoadingScene::update(float dt) {
 
 void LoadingScene::finishLoading() {
     BookScript book;
-    if (!loadOrCompileBook(app_, bookPath_, book) || book.chapters.empty()) {
+    const bool loaded = target_ == LoadingTarget::Chapters ? loadChapterList(app_, bookPath_, book)
+                                                           : loadOrCompileBook(app_, bookPath_, book);
+    if (!loaded || book.chapters.empty()) {
         failed_ = true;
         errorMessage_ = "Unable to open this book.";
         return;
@@ -116,6 +145,11 @@ void LoadingScene::finishLoading() {
     if (!app_.progressStore().get(book.bookId, progress)) {
         progress.bookId = book.bookId;
         progress.chapterIndex = 0;
+        progress.sentenceIndex = 0;
+    }
+    if (requestedChapterIndex_ >= 0) {
+        progress.chapterIndex = static_cast<std::uint32_t>(
+            std::min<int>(requestedChapterIndex_, static_cast<int>(book.chapters.size()) - 1));
         progress.sentenceIndex = 0;
     }
     progress.autoPlay = false;

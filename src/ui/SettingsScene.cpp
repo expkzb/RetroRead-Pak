@@ -7,21 +7,26 @@
 #include "platform/Input.h"
 #include "platform/Renderer.h"
 #include "ui/ReaderScene.h"
+#include "ui/ThemePalette.h"
 
 namespace {
-const char* dialogueStyleName(DialogueStyle style) {
-    switch (style) {
-    case DialogueStyle::Frame:
-        return "Frame";
-    case DialogueStyle::Battle:
-        return "Battle";
-    case DialogueStyle::Bold:
-        return "Bold";
-    case DialogueStyle::Calm:
-        return "Calm";
-    case DialogueStyle::Classic:
+const char* themePresetName(ThemePreset preset) {
+    switch (preset) {
+    case ThemePreset::BoldAmber:
+        return "Bold Amber";
+    case ThemePreset::CalmTeal:
+        return "Calm Teal";
+    case ThemePreset::FrameBlue:
+        return "Frame Blue";
+    case ThemePreset::BattleRed:
+        return "Battle Red";
+    case ThemePreset::MintLcd:
+        return "Mint LCD";
+    case ThemePreset::GbInvert:
+        return "GB Invert";
+    case ThemePreset::ClassicDark:
     default:
-        return "Classic";
+        return "Classic Dark";
     }
 }
 
@@ -95,10 +100,12 @@ void SettingsScene::update(float dt) {
 
     if (input.wasPressed(Action::Up) && selectedIndex_ > 0) {
         --selectedIndex_;
+        clampScroll();
     }
 
     if (input.wasPressed(Action::Down) && selectedIndex_ < 5) {
         ++selectedIndex_;
+        clampScroll();
     }
 
     if (input.wasPressed(Action::Left)) {
@@ -111,13 +118,15 @@ void SettingsScene::update(float dt) {
 }
 
 void SettingsScene::render(Renderer& renderer) {
-    renderer.clear(Color{8, 12, 18, 255});
     const ReaderSettings& settings = app_.settings();
+    const ThemePalette palette = themePalette(settings.themePreset);
+
+    renderer.clear(palette.screenBackground);
 
     renderer.drawText(
         "Reader Settings",
         Rect{60, 18, 860, uiSpacing(40, 70)},
-        Color{255, 233, 188, 255},
+        palette.headerText,
         uiFont(28, 42),
         TextAlign::Left,
         settings.fontPreset);
@@ -125,7 +134,7 @@ void SettingsScene::render(Renderer& renderer) {
     renderer.drawText(
         "Up/Down: select  Left/Right: change  Start/Menu: back",
         Rect{60, 92, 920, uiSpacing(24, 32)},
-        Color{174, 194, 214, 255},
+        palette.secondaryText,
         uiFont(16, 22),
         TextAlign::Left,
         settings.fontPreset);
@@ -134,7 +143,7 @@ void SettingsScene::render(Renderer& renderer) {
         renderer.drawText(
             app_.performanceHudText(),
             Rect{renderer.screenWidth() - 360, 18, 320, 24},
-            Color{174, 194, 214, 220},
+            palette.secondaryText,
             uiFont(14, 18),
             TextAlign::Right,
             settings.fontPreset);
@@ -144,18 +153,26 @@ void SettingsScene::render(Renderer& renderer) {
         "Reader Font Size: " + std::to_string(settings.fontSize),
         "Text Speed: " + std::to_string(settings.textSpeed) + " ms",
         std::string("Text Voice: ") + textVoiceModeName(settings.textVoiceMode),
-        std::string("Dialogue Style: ") + dialogueStyleName(settings.dialogueStyle),
+        std::string("Theme: ") + themePresetName(settings.themePreset),
         std::string("Font: ") + fontPresetName(settings.fontPreset),
         std::string("Performance: ") + performanceModeName(settings.performanceMode),
     };
 
     int y = uiSpacing(170, 200);
-    for (int i = 0; i < 6; ++i) {
+    const int startIndex = scrollOffset_;
+    const int endIndex = std::min(6, startIndex + 5);
+    for (int i = startIndex; i < endIndex; ++i) {
         const bool selected = i == selectedIndex_;
+        const Rect rowRect{72, y - uiSpacing(18, 26), 884, uiSpacing(62, 98)};
+        if (selected) {
+            renderer.fillRect(rowRect, palette.selectionFill);
+            renderer.drawRect(rowRect, palette.selectionOutline);
+        }
+        const int textTop = rowRect.y + (rowRect.h - uiSpacing(30, 52)) / 2;
         renderer.drawText(
             rows[i],
-            Rect{88, y, 860, uiSpacing(30, 52)},
-            selected ? Color{255, 233, 188, 255} : Color{230, 236, 244, 255},
+            Rect{88, textTop, 860, uiSpacing(30, 52)},
+            selected ? palette.selectionText : palette.primaryText,
             uiFont(22, 40),
             TextAlign::Left,
             settings.fontPreset);
@@ -185,10 +202,10 @@ void SettingsScene::applyDelta(int delta) {
         break;
     }
     case 3: {
-        int style = static_cast<int>(settings.dialogueStyle);
-        constexpr int kStyleCount = 5;
-        style = (style + delta + kStyleCount) % kStyleCount;
-        settings.dialogueStyle = static_cast<DialogueStyle>(style);
+        int preset = static_cast<int>(settings.themePreset);
+        constexpr int kPresetCount = 7;
+        preset = (preset + delta + kPresetCount) % kPresetCount;
+        settings.themePreset = static_cast<ThemePreset>(preset);
         break;
     }
     case 4: {
@@ -214,4 +231,16 @@ void SettingsScene::applyDelta(int delta) {
 
 void SettingsScene::returnToReader() {
     app_.sceneManager().replace(std::make_unique<ReaderScene>(app_, std::move(book_), progress_));
+}
+
+void SettingsScene::clampScroll() {
+    const int visibleRows = 5;
+    const int maxOffset = std::max(0, 6 - visibleRows);
+    if (selectedIndex_ < scrollOffset_) {
+        scrollOffset_ = selectedIndex_;
+    }
+    if (selectedIndex_ >= scrollOffset_ + visibleRows) {
+        scrollOffset_ = selectedIndex_ - visibleRows + 1;
+    }
+    scrollOffset_ = std::max(0, std::min(scrollOffset_, maxOffset));
 }

@@ -13,6 +13,7 @@
 #include "ui/ChapterScene.h"
 #include "ui/LoadingScene.h"
 #include "ui/ReaderScene.h"
+#include "ui/ThemePalette.h"
 
 namespace {
 int computePercentRead(const BookScript& book, const ReadingProgress& progress) {
@@ -183,12 +184,13 @@ void BookListScene::render(Renderer& renderer) {
     const int leftMargin = std::max(24, screenWidth / 24);
     const int headerWidth = screenWidth - leftMargin * 2;
     const int listWidth = screenWidth - leftMargin * 2 - 12;
+    const ThemePalette palette = themePalette(app_.settings().themePreset);
 
-    renderer.clear(Color{10, 14, 20, 255});
+    renderer.clear(palette.screenBackground);
     renderer.drawText(
         "RetroRead",
         Rect{leftMargin, 24, headerWidth, uiSpacing(40, 84)},
-        Color{255, 233, 188, 255},
+        palette.headerText,
         uiFont(28, 56),
         TextAlign::Left,
         app_.settings().fontPreset);
@@ -196,7 +198,7 @@ void BookListScene::render(Renderer& renderer) {
     renderer.drawText(
         "A: continue  Y: chapters  Menu: quit",
         Rect{leftMargin, 96, headerWidth, 40},
-        Color{174, 194, 214, 255},
+        palette.secondaryText,
         uiFont(16, 32),
         TextAlign::Left,
         app_.settings().fontPreset);
@@ -205,14 +207,14 @@ void BookListScene::render(Renderer& renderer) {
         renderer.drawText(
             "Books folder is empty.",
             Rect{leftMargin, 190, headerWidth, uiSpacing(28, 44)},
-            Color{240, 243, 248, 255},
+            palette.primaryText,
             uiFont(22, 44),
             TextAlign::Left,
             app_.settings().fontPreset);
         renderer.drawText(
             "Put .epub or .txt files into ./Books",
             Rect{leftMargin, 190 + uiSpacing(30, 52), headerWidth, uiSpacing(28, 44)},
-            Color{240, 243, 248, 255},
+            palette.primaryText,
             uiFont(22, 44),
             TextAlign::Left,
             app_.settings().fontPreset);
@@ -224,18 +226,25 @@ void BookListScene::render(Renderer& renderer) {
     const int endIndex = std::min(static_cast<int>(books_.size()), startIndex + visibleEntryCount());
     for (int index = startIndex; index < endIndex; ++index) {
         const bool selected = index == selectedIndex_;
+        const int titleY = y + uiSpacing(2, 4);
+        const int statusY = y + uiSpacing(28, 52);
+        const Rect rowRect{leftMargin + 8, y - uiSpacing(1, 2), listWidth + 24, uiSpacing(59, 96)};
+        if (selected) {
+            renderer.fillRect(rowRect, palette.selectionFill);
+            renderer.drawRect(rowRect, palette.selectionOutline);
+        }
         renderer.drawText(
             books_[index].item.title,
-            Rect{leftMargin + 24, y, listWidth, uiSpacing(28, 56)},
-            selected ? Color{255, 233, 188, 255} : Color{220, 226, 235, 255},
+            Rect{leftMargin + 24, titleY, listWidth, uiSpacing(28, 56)},
+            selected ? palette.selectionText : palette.primaryText,
             uiFont(20, 40),
             TextAlign::Left,
             app_.settings().fontPreset);
 
         renderer.drawText(
             buildListStatus(books_[index]),
-            Rect{leftMargin + 44, y + uiSpacing(24, 46), listWidth - 20, uiSpacing(20, 36)},
-            selected ? Color{227, 211, 172, 255} : Color{150, 170, 190, 255},
+            Rect{leftMargin + 44, statusY, listWidth - 20, uiSpacing(20, 36)},
+            selected ? palette.selectionSubtext : palette.secondaryText,
             uiFont(14, 28),
             TextAlign::Left,
             app_.settings().fontPreset);
@@ -246,7 +255,7 @@ void BookListScene::render(Renderer& renderer) {
         renderer.drawText(
             app_.performanceHudText(),
             Rect{renderer.screenWidth() - 360, 18, 320, 24},
-            Color{174, 194, 214, 220},
+            palette.secondaryText,
             uiFont(14, 18),
             TextAlign::Right,
             app_.settings().fontPreset);

@@ -4,12 +4,14 @@
 #include <string>
 #include <vector>
 
-enum class DialogueStyle : std::uint8_t {
-    Classic = 0,
-    Bold = 1,
-    Calm = 2,
-    Frame = 3,
-    Battle = 4,
+enum class ThemePreset : std::uint8_t {
+    ClassicDark = 0,
+    BoldAmber = 1,
+    CalmTeal = 2,
+    FrameBlue = 3,
+    BattleRed = 4,
+    MintLcd = 5,
+    GbInvert = 6,
 };
 
 enum class FontPreset : std::uint8_t {
@@ -65,7 +67,7 @@ struct ReaderSettings {
     bool defaultAutoPlay = false;
     TextVoiceMode textVoiceMode = TextVoiceMode::Off;
     std::uint32_t fontSize = 30;
-    DialogueStyle dialogueStyle = DialogueStyle::Classic;
+    ThemePreset themePreset = ThemePreset::ClassicDark;
     FontPreset fontPreset = FontPreset::Normal;
     PerformanceMode performanceMode = PerformanceMode::Off;
 };

@@ -9,6 +9,7 @@
 #include "platform/Renderer.h"
 #include "ui/BookListScene.h"
 #include "ui/ReaderScene.h"
+#include "ui/ThemePalette.h"
 
 namespace {
 int uiFont(int normalSize, int handheldSize) {
@@ -88,11 +89,13 @@ void ChapterScene::update(float dt) {
 }
 
 void ChapterScene::render(Renderer& renderer) {
-    renderer.clear(Color{10, 14, 20, 255});
+    const ThemePalette palette = themePalette(app_.settings().themePreset);
+
+    renderer.clear(palette.screenBackground);
     renderer.drawText(
         book_.title,
         Rect{48, 40, renderer.screenWidth() - 96, uiSpacing(36, 60)},
-        Color{255, 233, 188, 255},
+        palette.headerText,
         uiFont(26, 48),
         TextAlign::Left,
         app_.settings().fontPreset);
@@ -100,7 +103,7 @@ void ChapterScene::render(Renderer& renderer) {
     renderer.drawText(
         "A: open  Menu: back",
         Rect{48, 100, renderer.screenWidth() - 96, uiSpacing(24, 40)},
-        Color{174, 194, 214, 255},
+        palette.secondaryText,
         uiFont(16, 30),
         TextAlign::Left,
         app_.settings().fontPreset);
@@ -109,7 +112,7 @@ void ChapterScene::render(Renderer& renderer) {
         renderer.drawText(
             "No readable chapters found.",
             Rect{48, 180, renderer.screenWidth() - 96, uiSpacing(28, 52)},
-            Color{240, 243, 248, 255},
+            palette.primaryText,
             uiFont(22, 40),
             TextAlign::Left,
             app_.settings().fontPreset);
@@ -123,12 +126,17 @@ void ChapterScene::render(Renderer& renderer) {
     int y = uiSpacing(132, 180);
     for (int i = startIndex; i < endIndex; ++i) {
         const bool selected = i == selectedIndex_;
-        const Color textColor = selected ? Color{255, 233, 188, 255} : Color{220, 226, 235, 255};
-        const Color metaColor = selected ? Color{227, 211, 172, 255} : Color{150, 170, 190, 255};
+        const Color textColor = selected ? palette.selectionText : palette.primaryText;
+        const Color metaColor = selected ? palette.selectionSubtext : palette.secondaryText;
+        if (selected) {
+            const Rect rowRect{52, y - uiSpacing(10, 14), renderer.screenWidth() - 104, uiSpacing(56, 88)};
+            renderer.fillRect(rowRect, palette.selectionFill);
+            renderer.drawRect(rowRect, palette.selectionOutline);
+        }
 
         renderer.drawText(
             std::to_string(i + 1) + ". " + book_.chapters[i].title,
-            Rect{64, y, renderer.screenWidth() - 128, uiSpacing(26, 48)},
+            Rect{64, y + uiSpacing(2, 4), renderer.screenWidth() - 128, uiSpacing(26, 48)},
             textColor,
             uiFont(20, 38),
             TextAlign::Left,
@@ -136,7 +144,7 @@ void ChapterScene::render(Renderer& renderer) {
 
         renderer.drawText(
             std::to_string(book_.chapters[i].sentences.size()) + " sentences",
-            Rect{90, y + uiSpacing(24, 42), renderer.screenWidth() - 180, uiSpacing(20, 32)},
+            Rect{90, y + uiSpacing(26, 46), renderer.screenWidth() - 180, uiSpacing(20, 32)},
             metaColor,
             uiFont(14, 24),
             TextAlign::Left,
@@ -146,7 +154,7 @@ void ChapterScene::render(Renderer& renderer) {
             renderer.drawText(
                 "resume",
                 Rect{renderer.screenWidth() - uiSpacing(160, 220), y, uiSpacing(100, 160), uiSpacing(20, 32)},
-                selected ? Color{255, 233, 188, 255} : Color{150, 170, 190, 255},
+                selected ? palette.selectionText : palette.secondaryText,
                 uiFont(14, 24),
                 TextAlign::Right,
                 app_.settings().fontPreset);
@@ -159,7 +167,7 @@ void ChapterScene::render(Renderer& renderer) {
         renderer.drawText(
             app_.performanceHudText(),
             Rect{renderer.screenWidth() - 360, 18, 320, 24},
-            Color{174, 194, 214, 220},
+            palette.secondaryText,
             uiFont(14, 18),
             TextAlign::Right,
             app_.settings().fontPreset);

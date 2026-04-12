@@ -11,6 +11,7 @@
 #include "text/Utf8.h"
 #include "ui/BookListScene.h"
 #include "ui/SettingsScene.h"
+#include "ui/ThemePalette.h"
 
 namespace {
 bool isLineStartForbiddenPunctuation(const std::string& cp) {
@@ -310,11 +311,11 @@ void ReaderScene::render(Renderer& renderer) {
     const int dialogueWidth = screenWidth - horizontalMargin * 2;
     dialogueBox_.setBounds(Rect{horizontalMargin, dialogueY, dialogueWidth, dialogueHeight});
 
-    renderer.clear(Color{20, 24, 34, 255});
-
     const Chapter* chapter = currentChapter();
     const Sentence* sentence = currentSentence();
     const ReaderSettings& settings = app_.settings();
+    const ThemePalette palette = themePalette(settings.themePreset);
+    renderer.clear(palette.screenBackground);
     refreshLayoutCache(renderer);
     maxVisibleLines_ = visibleLineCapacity(renderer);
     const std::string status =
@@ -330,7 +331,7 @@ void ReaderScene::render(Renderer& renderer) {
     renderer.drawText(
         book_.title,
         Rect{horizontalMargin, uiSpacing(std::max(20, screenHeight / 22), 24), headerWidth, uiSpacing(40, 58)},
-        Color{255, 233, 188, 255},
+        palette.headerText,
         readerHeaderFont(),
         TextAlign::Left,
         settings.fontPreset);
@@ -339,7 +340,7 @@ void ReaderScene::render(Renderer& renderer) {
         renderer.drawText(
             book_.author,
             Rect{horizontalMargin, uiSpacing(std::max(58, screenHeight / 13), 76), headerWidth, uiSpacing(22, 30)},
-            Color{154, 172, 192, 255},
+            palette.secondaryText,
             readerMetaFont(),
             TextAlign::Left,
             settings.fontPreset);
@@ -348,7 +349,7 @@ void ReaderScene::render(Renderer& renderer) {
     renderer.drawText(
         status,
         Rect{horizontalMargin, uiSpacing(std::max(92, screenHeight / 8), 124), headerWidth, uiSpacing(24, 32)},
-        Color{174, 194, 214, 255},
+        palette.secondaryText,
         readerStatusFont(),
         TextAlign::Left,
         settings.fontPreset);
@@ -357,7 +358,7 @@ void ReaderScene::render(Renderer& renderer) {
         renderer.drawText(
             app_.performanceHudText(),
             Rect{screenWidth - horizontalMargin - 340, uiSpacing(std::max(24, screenHeight / 22), 28), 320, 24},
-            Color{174, 194, 214, 220},
+            palette.secondaryText,
             readerMetaFont(),
             TextAlign::Right,
             settings.fontPreset);
@@ -436,7 +437,7 @@ void ReaderScene::handleInput() {
         return;
     }
 
-    if (input.wasPressed(Action::Confirm)) {
+    if (input.wasPressed(Action::Confirm) || input.wasPressed(Action::Right)) {
         if (state_ == ReaderState::Typing) {
             if (canAdvanceTypedPage(renderer)) {
                 advancePage(renderer);

@@ -16,6 +16,7 @@
 #include "ui/BookListScene.h"
 #include "ui/ChapterScene.h"
 #include "ui/ReaderScene.h"
+#include "ui/ThemePalette.h"
 
 namespace {
 bool hasExtension(const std::string& path, const char* extension) {
@@ -132,13 +133,14 @@ void LoadingScene::finishLoading() {
 void LoadingScene::render(Renderer& renderer) {
     const int screenWidth = renderer.screenWidth();
     const int centerX = screenWidth / 2;
+    const ThemePalette palette = themePalette(app_.settings().themePreset);
 
-    renderer.clear(Color{10, 14, 20, 255});
+    renderer.clear(palette.screenBackground);
 
     renderer.drawText(
         failed_ ? "Open Failed" : "Preparing Book",
         Rect{40, uiSpacing(90, 160), screenWidth - 80, uiSpacing(42, 70)},
-        Color{255, 233, 188, 255},
+        palette.headerText,
         uiFont(28, 52),
         TextAlign::Center,
         app_.settings().fontPreset);
@@ -146,7 +148,7 @@ void LoadingScene::render(Renderer& renderer) {
     renderer.drawText(
         bookTitle_,
         Rect{60, uiSpacing(150, 250), screenWidth - 120, uiSpacing(30, 48)},
-        Color{220, 226, 235, 255},
+        palette.primaryText,
         uiFont(18, 32),
         TextAlign::Center,
         app_.settings().fontPreset);
@@ -155,14 +157,14 @@ void LoadingScene::render(Renderer& renderer) {
         renderer.drawText(
             errorMessage_,
             Rect{60, uiSpacing(220, 340), screenWidth - 120, uiSpacing(28, 44)},
-            Color{235, 196, 188, 255},
+            palette.accentText,
             uiFont(18, 32),
             TextAlign::Center,
             app_.settings().fontPreset);
         renderer.drawText(
             "A or Menu: back",
             Rect{60, uiSpacing(270, 410), screenWidth - 120, uiSpacing(24, 36)},
-            Color{174, 194, 214, 255},
+            palette.secondaryText,
             uiFont(16, 28),
             TextAlign::Center,
             app_.settings().fontPreset);
@@ -170,15 +172,15 @@ void LoadingScene::render(Renderer& renderer) {
     }
 
     renderer.fillRect(Rect{centerX - uiSpacing(110, 180), uiSpacing(230, 350), uiSpacing(220, 360), uiSpacing(14, 20)},
-                      Color{26, 34, 48, 255});
+                      palette.dialogueInnerBorder);
     renderer.fillRect(Rect{centerX - uiSpacing(110, 180), uiSpacing(230, 350), uiSpacing(150, 240), uiSpacing(14, 20)},
-                      Color{96, 132, 164, 255});
+                      palette.dialogueBorder);
 
     renderer.drawText(
         target_ == LoadingTarget::Reader ? "Building cache and loading your last position..."
                                          : "Building cache and opening the chapter list...",
         Rect{60, uiSpacing(270, 400), screenWidth - 120, uiSpacing(28, 44)},
-        Color{174, 194, 214, 255},
+        palette.secondaryText,
         uiFont(17, 28),
         TextAlign::Center,
         app_.settings().fontPreset);

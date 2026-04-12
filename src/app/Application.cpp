@@ -54,6 +54,7 @@ std::uint64_t readProcessJiffies() {
     return utime + stime;
 #endif
 }
+
 }
 
 Application::Application(

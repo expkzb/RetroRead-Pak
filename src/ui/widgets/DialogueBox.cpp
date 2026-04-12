@@ -1,6 +1,7 @@
 #include <algorithm>
 
 #include "ui/widgets/DialogueBox.h"
+#include "ui/ThemePalette.h"
 
 namespace {
 int uiSpacing(int normalValue, int handheldValue) {
@@ -97,49 +98,16 @@ void DialogueBox::setHint(const std::string& hint) {
 }
 
 void DialogueBox::render(Renderer& renderer, const ReaderSettings& settings) {
-    Color panel{16, 22, 32, 224};
-    Color border{96, 132, 164, 255};
-    Color titleColor{255, 233, 188, 255};
-    Color bodyColor{240, 243, 248, 255};
-    Color hintColor{174, 194, 214, 255};
-    int borderThickness = 1;
-    bool drawInnerFrame = false;
-    bool useBattleFrame = false;
-    Color innerBorder{56, 82, 110, 255};
-
-    switch (settings.dialogueStyle) {
-    case DialogueStyle::Bold:
-        panel = Color{12, 18, 28, 236};
-        border = Color{255, 210, 120, 255};
-        borderThickness = 3;
-        break;
-    case DialogueStyle::Calm:
-        panel = Color{10, 28, 30, 224};
-        border = Color{112, 176, 170, 255};
-        titleColor = Color{214, 245, 235, 255};
-        hintColor = Color{160, 210, 208, 255};
-        break;
-    case DialogueStyle::Frame:
-        panel = Color{14, 19, 30, 238};
-        border = Color{148, 176, 212, 255};
-        innerBorder = Color{67, 98, 138, 255};
-        titleColor = Color{246, 230, 179, 255};
-        drawInnerFrame = true;
-        break;
-    case DialogueStyle::Battle:
-        panel = Color{20, 12, 18, 238};
-        border = Color{226, 113, 86, 255};
-        innerBorder = Color{255, 204, 120, 255};
-        titleColor = Color{255, 225, 160, 255};
-        hintColor = Color{255, 186, 156, 255};
-        borderThickness = 2;
-        drawInnerFrame = true;
-        useBattleFrame = true;
-        break;
-    case DialogueStyle::Classic:
-    default:
-        break;
-    }
+    const ThemePalette palette = themePalette(settings.themePreset);
+    const Color panel = palette.dialoguePanel;
+    const Color border = palette.dialogueBorder;
+    const Color titleColor = palette.dialogueTitle;
+    const Color bodyColor = palette.dialogueBody;
+    const Color hintColor = palette.dialogueHint;
+    const int borderThickness = palette.dialogueBorderThickness;
+    const bool drawInnerFrame = palette.dialogueInnerFrame;
+    const bool useBattleFrame = palette.dialogueBattleFrame;
+    const Color innerBorder = palette.dialogueInnerBorder;
 
     renderer.fillRect(bounds_, panel);
     if (useBattleFrame) {

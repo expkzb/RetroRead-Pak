@@ -37,7 +37,9 @@ bool SettingsStore::load(FileSystem& fileSystem, ReaderSettings& settings) const
         } else if (key == "fontSize") {
             settings.fontSize = static_cast<std::uint32_t>(std::stoul(value));
         } else if (key == "dialogueStyle") {
-            settings.dialogueStyle = static_cast<DialogueStyle>(std::stoi(value));
+            settings.themePreset = static_cast<ThemePreset>(std::stoi(value));
+        } else if (key == "themePreset") {
+            settings.themePreset = static_cast<ThemePreset>(std::stoi(value));
         } else if (key == "fontPreset") {
             settings.fontPreset = static_cast<FontPreset>(std::stoi(value));
         } else if (key == "showPerformanceHud") {
@@ -58,7 +60,7 @@ bool SettingsStore::save(FileSystem& fileSystem, const ReaderSettings& settings)
     out << "defaultAutoPlay\t" << (settings.defaultAutoPlay ? 1 : 0) << '\n';
     out << "textVoiceMode\t" << static_cast<int>(settings.textVoiceMode) << '\n';
     out << "fontSize\t" << settings.fontSize << '\n';
-    out << "dialogueStyle\t" << static_cast<int>(settings.dialogueStyle) << '\n';
+    out << "themePreset\t" << static_cast<int>(settings.themePreset) << '\n';
     out << "fontPreset\t" << static_cast<int>(settings.fontPreset) << '\n';
     out << "performanceMode\t" << static_cast<int>(settings.performanceMode) << '\n';
 

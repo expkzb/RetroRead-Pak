@@ -13,8 +13,10 @@ public:
 private:
     void applyDelta(int delta);
     void returnToReader();
+    void clampScroll();
 
     BookScript book_;
     ReadingProgress progress_;
     int selectedIndex_ = 0;
+    int scrollOffset_ = 0;
 };
